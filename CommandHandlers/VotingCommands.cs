@@ -58,7 +58,7 @@ namespace DemocracyDiscordBot.CommandHandlers
         /// <summary>
         /// Gets the topic section for a voting command. Also performs other basic prechecks.
         /// </summary>
-        public static FDSSection GetVoteTopicSection(string[] cmds, IUserMessage message, bool requiresAuth = true, out string topic)
+        public static FDSSection GetVoteTopicSection(string[] cmds, IUserMessage message, out string topic, bool requiresAuth = true)
         {
             topic = null;
             if (requiresAuth && !IsUserAllowed(message))
@@ -98,7 +98,7 @@ namespace DemocracyDiscordBot.CommandHandlers
         /// </summary>
         public void CMD_Vote(string[] cmds, IUserMessage message)
         {
-            FDSSection topicSection = GetVoteTopicSection(cmds, message, false, out string topicName);
+            FDSSection topicSection = GetVoteTopicSection(cmds, message, out string topicName, false);
             if (topicSection == null)
             {
                 return;
