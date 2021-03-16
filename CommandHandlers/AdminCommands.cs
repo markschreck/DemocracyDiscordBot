@@ -327,8 +327,8 @@ namespace DemocracyDiscordBot.CommandHandlers
             }
             SendGenericPositiveMessageReply(message, $"Vote Results For **{topicName}: {topicSection.GetString("Topic")}**", $"**__Winner__**: **{winner}**: `{choicesSection.GetString(winner)}`"
                 + $"\n\n**Stats:**\nUsers who voted, in total: {usersWhoVotedTotal}\n{winnerStats}\n\n"
-                + $"**__Runner Up__**: **{secondPlace}**: `{choicesSection.GetString(secondPlace)}`\n**Stats For Runner Up**:\n{secondPlaceStats}"
-                + $"**__Thrid Place__**: **{thirdPlace}**: `{choicesSection.GetString(thirdPlace)}`\n**Stats For Third Place**:\n{thirdPlaceStats}"
+                + $"**__Runner Up__**: **{secondPlace}**: `{choicesSection.GetString(secondPlace)}`\n**Stats For Runner Up**:\n{secondPlaceStats}\n\n"
+                + $"**__Thrid Place__**: **{thirdPlace}**: `{choicesSection.GetString(thirdPlace)}`\n**Stats For Third Place**:\n{thirdPlaceStats}\n\n"
                 + $"**__Fourth Place__**: **{fourthPlace}**: `{choicesSection.GetString(fourthPlace)}`\n**Stats For Fourth Place**:\n{fourthPlaceStats}");
             DemocracyBot.Save();
         }
@@ -525,8 +525,8 @@ namespace DemocracyDiscordBot.CommandHandlers
             }
             SendGenericPositiveMessageReply(message, $"Vote Results For **{topicName}: {topicSection.GetString("Topic")}**", $"**__Winner__**: **{winner}**: `{choicesSection.GetString(winner)}`"
                 + $"\n\n**Stats:**\nUsers who voted, in total: {usersWhoVotedTotal}\n{winnerStats}\n\n"
-                + $"**__Runner Up__**: **{secondPlace}**: `{choicesSection.GetString(secondPlace)}`\n**Stats For Runner Up**:\n{secondPlaceStats}"
-                + $"**__Thrid Place__**: **{thirdPlace}**: `{choicesSection.GetString(thirdPlace)}`\n**Stats For Third Place**:\n{thirdPlaceStats}"
+                + $"**__Runner Up__**: **{secondPlace}**: `{choicesSection.GetString(secondPlace)}`\n**Stats For Runner Up**:\n{secondPlaceStats}\n\n"
+                + $"**__Thrid Place__**: **{thirdPlace}**: `{choicesSection.GetString(thirdPlace)}`\n**Stats For Third Place**:\n{thirdPlaceStats}\n\n"
                 + $"**__Fourth Place__**: **{fourthPlace}**: `{choicesSection.GetString(fourthPlace)}`\n**Stats For Fourth Place**:\n{fourthPlaceStats}");
             //DemocracyBot.Save();
         }
