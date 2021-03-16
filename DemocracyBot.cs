@@ -85,6 +85,7 @@ namespace DemocracyDiscordBot
                     bot.RegisterCommand(coreCommands.CMD_Restart, "restart");
                     bot.RegisterCommand(adminCommands.CMD_CallVote, "callvote");
                     bot.RegisterCommand(adminCommands.CMD_EndVote, "endvote");
+                    bot.RegisterCommand(adminCommands.CMD_VoteStatus, "votestatus");
                     bot.Client.Ready += () =>
                     {
                         bot.Client.SetGameAsync("With the balance of power in this world.").Wait();
