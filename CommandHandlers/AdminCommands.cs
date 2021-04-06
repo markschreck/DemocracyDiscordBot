@@ -154,183 +154,7 @@ namespace DemocracyDiscordBot.CommandHandlers
             DemocracyBot.VoteTopicsSection.Remove(realKey);
             RefreshTopicData(topicName, topicSection, true);
             FDSSection userResultsSection = topicSection.GetSection("user_results");
-            if (userResultsSection == null || userResultsSection.GetRootKeys().IsEmpty())
-            {
-                SendGenericNegativeMessageReply(message, $"Vote For Topic {topicName} Failed", "No votes were cast.");
-                DemocracyBot.Save();
-                return;
-            }
-            List<List<string>> voteSets = new List<List<string>>(50);
-            foreach (string userId in userResultsSection.GetRootKeys())
-            {
-                List<string> choices = userResultsSection.GetStringList(userId);
-                if (choices != null && !choices.IsEmpty() && !(choices.Count == 1 && choices[0] == "none"))
-                {
-                    voteSets.Add(choices);
-                }
-            }
-            if (voteSets.IsEmpty())
-            {
-                SendGenericNegativeMessageReply(message, $"Vote For Topic {topicName} Failed", "No votes were cast.");
-                DemocracyBot.Save();
-                return;
-            }
-            int usersWhoVotedTotal = voteSets.Count;
-            Dictionary<string, int> votesTracker = new Dictionary<string, int>(128);
-            string winner = voteSets[0][0];
-            string secondPlace = voteSets[0][0];
-            string thirdPlace = voteSets[0][0];
-            string fourthPlace = voteSets[0][0];
-            int discards = 0;
-            bool haveWinner = false;
-            bool haveSecond = false;
-            bool haveThird = false;
-            string winnerStats = "(error: stats missing)";
-            string secondPlaceStats = "(error: second place missing)";
-            string thirdPlaceStats = "(no third place)";
-            string fourthPlaceStats = "(no fourth place)";
-            string gatherStats(string choice, string type)
-            {
-                int numberHadFirst = 0;
-                int positionTotal = 0;
-                int numberHadAtAll = 0;
-                foreach (string userId in userResultsSection.GetRootKeys())
-                {
-                    List<string> choices = userResultsSection.GetStringList(userId);
-                    if (choices != null && !choices.IsEmpty())
-                    {
-                        int index = choices.IndexOf(choice);
-                        if (index != -1)
-                        {
-                            numberHadAtAll++;
-                            positionTotal += index + 1;
-                            if (index == 0)
-                            {
-                                numberHadFirst++;
-                            }
-                        }
-                    }
-                }
-                return $"Options that were discarded due to low support: {discards}\n"
-                + $"Users whose votes were discarded due to supporting only unpopular options: {usersWhoVotedTotal - voteSets.Count}\nUsers who listed the {type} first: {numberHadFirst}\n"
-                + $"Users who listed the {type} at all: {numberHadAtAll}\nAverage ranking of the {type}: {positionTotal / (float)numberHadAtAll:0.0}";
-            }
-            while (true)
-            {
-                votesTracker.Clear();
-                foreach (List<string> voteSet in voteSets)
-                {
-                    string vote = voteSet[0];
-                    if (!votesTracker.TryGetValue(vote, out int count))
-                    {
-                        count = 0;
-                    }
-                    votesTracker[vote] = count + 1;
-                }
-                if (votesTracker.Count == 0)
-                {
-                    Console.WriteLine("Something went funky in vote counting... tracker is empty without a clear winner!");
-                    break;
-                }
-                string best = voteSets[0][0], worst = voteSets[0][0];
-                int bestCount = 0, worstCount = int.MaxValue;
-                foreach (KeyValuePair<string, int> voteResult in votesTracker)
-                {
-                    if (voteResult.Value > bestCount)
-                    {
-                        best = voteResult.Key;
-                        bestCount = voteResult.Value;
-                    }
-                    if (voteResult.Value < worstCount)
-                    {
-                        worst = voteResult.Key;
-                        worstCount = voteResult.Value;
-                    }
-                }
-                if (bestCount * 2 > voteSets.Count)
-                {
-                    if (!haveWinner)
-                    {
-                        winner = best;
-                        winnerStats = gatherStats(winner, "winner");
-                        haveWinner = true;
-                        for (int i = 0; i < voteSets.Count; i++)
-                        {
-                            if (voteSets[i].Contains(winner))
-                            {
-                                voteSets[i].Remove(winner);
-                                if (voteSets[i].IsEmpty())
-                                {
-                                    voteSets.RemoveAt(i--);
-                                }
-                            }
-                        }
-                        worst = winner;
-                    }
-                    else if (!haveSecond)
-                    {
-                        secondPlace = best;
-                        secondPlaceStats = gatherStats(secondPlace, "runner up");
-                        haveSecond = true;
-                        for (int i = 0; i < voteSets.Count; i++)
-                        {
-                            if (voteSets[i].Contains(secondPlace))
-                            {
-                                voteSets[i].Remove(secondPlace);
-                                if (voteSets[i].IsEmpty())
-                                {
-                                    voteSets.RemoveAt(i--);
-                                }
-                            }
-                        }
-                        //break;
-                    }
-                    else if (!haveThird)
-                    {
-                        thirdPlace = best;
-                        thirdPlaceStats = gatherStats(thirdPlace, "thrid place");
-                        haveThird = true;
-                        for (int i = 0; i < voteSets.Count; i++)
-                        {
-                            if (voteSets[i].Contains(thirdPlace))
-                            {
-                                voteSets[i].Remove(thirdPlace);
-                                if (voteSets[i].IsEmpty())
-                                {
-                                    voteSets.RemoveAt(i--);
-                                }
-                            }
-                        }
-                    }
-                    else 
-                    {
-                        fourthPlace = best;
-                        fourthPlaceStats = gatherStats(fourthPlace, "fourth place");
-                        break;
-                    }
-                }
-                for (int i = 0; i < voteSets.Count; i++)
-                {
-                    if (voteSets[i][0] == worst)
-                    {
-                        voteSets[i].RemoveAt(0);
-                        if (voteSets[i].IsEmpty())
-                        {
-                            voteSets.RemoveAt(i--);
-                        }
-                    }
-                }
-                if (!haveWinner)
-                {
-                    discards++;
-                }
-            }
-            SendGenericPositiveMessageReply(message, $"Vote Results For **{topicName}: {topicSection.GetString("Topic")}**", $"**__Winner__**: **{winner}**: `{choicesSection.GetString(winner)}`"
-                + $"\n\n**Stats:**\nUsers who voted, in total: {usersWhoVotedTotal}\n{winnerStats}\n\n"
-                + $"**__Runner Up__**: **{secondPlace}**: `{choicesSection.GetString(secondPlace)}`\n**Stats For Runner Up**:\n{secondPlaceStats}\n\n"
-                + $"**__Thrid Place__**: **{thirdPlace}**: `{choicesSection.GetString(thirdPlace)}`\n**Stats For Third Place**:\n{thirdPlaceStats}\n\n"
-                + $"**__Fourth Place__**: **{fourthPlace}**: `{choicesSection.GetString(fourthPlace)}`\n**Stats For Fourth Place**:\n{fourthPlaceStats}");
-            DemocracyBot.Save();
+            tallyVotes(topicSection, choicesSection, userResultsSection, message, topicName, true);
         }
 
         public void CMD_VoteStatus(string[] cmds, IUserMessage message)
@@ -347,15 +171,17 @@ namespace DemocracyDiscordBot.CommandHandlers
             topicName = topicName.ToLowerFast();
             Console.WriteLine($"Trying get vote status for {topicName} at {StringConversionHelper.DateTimeToString(DateTimeOffset.UtcNow, true)}");
             FDSSection choicesSection = topicSection.GetSection("Choices");
-            //Bot.ConfigFile.Set("old_topics." + StringConversionHelper.DateTimeToString(DateTimeOffset.UtcNow, true).Replace(".", "_") + "_topic_" + topicName.Replace(".", "_"), topicSection);
             string realKey = DemocracyBot.VoteTopicsSection.Data.Keys.First(s => s.ToLowerFast() == topicName);
-            //DemocracyBot.VoteTopicsSection.Remove(realKey);
             RefreshTopicData(topicName, topicSection, false);
             FDSSection userResultsSection = topicSection.GetSection("user_results");
+            tallyVotes(topicSection, choicesSection, userResultsSection, message, topicName, false);
+        }
+
+        private void tallyVotes(FDSSection topicSection, FDSSection choicesSection, FDSSection userResultsSection, IUserMessage message, string topicName, Boolean commitChanges) {
             if (userResultsSection == null || userResultsSection.GetRootKeys().IsEmpty())
             {
                 SendGenericNegativeMessageReply(message, $"Vote For Topic {topicName} Failed", "No votes were cast.");
-                //DemocracyBot.Save();
+                if (commitChanges) DemocracyBot.Save();
                 return;
             }
             List<List<string>> voteSets = new List<List<string>>(50);
@@ -370,23 +196,12 @@ namespace DemocracyDiscordBot.CommandHandlers
             if (voteSets.IsEmpty())
             {
                 SendGenericNegativeMessageReply(message, $"Vote For Topic {topicName} Failed", "No votes were cast.");
-                //DemocracyBot.Save();
+                if (commitChanges) DemocracyBot.Save();
                 return;
             }
             int usersWhoVotedTotal = voteSets.Count;
-            Dictionary<string, int> votesTracker = new Dictionary<string, int>(128);
-            string winner = voteSets[0][0];
-            string secondPlace = voteSets[0][0];
-            string thirdPlace = voteSets[0][0];
-            string fourthPlace = voteSets[0][0];
             int discards = 0;
-            bool haveWinner = false;
-            bool haveSecond = false;
-            bool haveThird = false;
-            string winnerStats = "(error: stats missing)";
-            string secondPlaceStats = "(error: second place missing)";
-            string thirdPlaceStats = "(no third place)";
-            string fourthPlaceStats = "(no fourth place)";
+            
             string gatherStats(string choice, string type)
             {
                 int numberHadFirst = 0;
@@ -413,122 +228,102 @@ namespace DemocracyDiscordBot.CommandHandlers
                 + $"Users whose votes were discarded due to supporting only unpopular options: {usersWhoVotedTotal - voteSets.Count}\nUsers who listed the {type} first: {numberHadFirst}\n"
                 + $"Users who listed the {type} at all: {numberHadAtAll}\nAverage ranking of the {type}: {positionTotal / (float)numberHadAtAll:0.0}";
             }
-            while (true)
-            {
-                votesTracker.Clear();
-                foreach (List<string> voteSet in voteSets)
+
+            Tuple<string, string> firstTuple = getRankWinner(voteSets);
+            Tuple<string, string> secondTuple = getRankWinner(voteSets);
+            Tuple<string, string> thirdTuple = getRankWinner(voteSets);
+            Tuple<string, string> fourthTuple = getRankWinner(voteSets);
+
+            Tuple<string, string> getRankWinner(List<List<string>> placeVoteSets ) {
+                string topRank = "";
+                string topRankStats = "";
+                bool haveWinner = false;
+
+                Dictionary<string, int> votesTracker = new Dictionary<string, int>(128);
+
+                discards = 0;
+
+                while (true)
                 {
-                    string vote = voteSet[0];
-                    if (!votesTracker.TryGetValue(vote, out int count))
+                    votesTracker.Clear();
+                    foreach (List<string> voteSet in placeVoteSets)
                     {
-                        count = 0;
-                    }
-                    votesTracker[vote] = count + 1;
-                }
-                if (votesTracker.Count == 0)
-                {
-                    Console.WriteLine("Something went funky in vote counting... tracker is empty without a clear winner!");
-                    break;
-                }
-                string best = voteSets[0][0], worst = voteSets[0][0];
-                int bestCount = 0, worstCount = int.MaxValue;
-                foreach (KeyValuePair<string, int> voteResult in votesTracker)
-                {
-                    if (voteResult.Value > bestCount)
-                    {
-                        best = voteResult.Key;
-                        bestCount = voteResult.Value;
-                    }
-                    if (voteResult.Value < worstCount)
-                    {
-                        worst = voteResult.Key;
-                        worstCount = voteResult.Value;
-                    }
-                }
-                if (bestCount * 2 > voteSets.Count)
-                {
-                    if (!haveWinner)
-                    {
-                        winner = best;
-                        winnerStats = gatherStats(winner, "winner");
-                        haveWinner = true;
-                        for (int i = 0; i < voteSets.Count; i++)
+                        string vote = voteSet[0]; //Only checking highest vote right now
+                        if (!votesTracker.TryGetValue(vote, out int count))
                         {
-                            if (voteSets[i].Contains(winner))
-                            {
-                                voteSets[i].Remove(winner);
-                                if (voteSets[i].IsEmpty())
-                                {
-                                    voteSets.RemoveAt(i--);
-                                }
-                            }
+                            count = 0;
                         }
-                        worst = winner;
+                        votesTracker[vote] = count + 1;
                     }
-                    else if (!haveSecond)
+                    if (votesTracker.Count == 0)
                     {
-                        secondPlace = best;
-                        secondPlaceStats = gatherStats(secondPlace, "runner up");
-                        haveSecond = true;
-                        for (int i = 0; i < voteSets.Count; i++)
-                        {
-                            if (voteSets[i].Contains(secondPlace))
-                            {
-                                voteSets[i].Remove(secondPlace);
-                                if (voteSets[i].IsEmpty())
-                                {
-                                    voteSets.RemoveAt(i--);
-                                }
-                            }
-                        }
-                        //break;
-                    }
-                    else if (!haveThird)
-                    {
-                        thirdPlace = best;
-                        thirdPlaceStats = gatherStats(thirdPlace, "thrid place");
-                        haveThird = true;
-                        for (int i = 0; i < voteSets.Count; i++)
-                        {
-                            if (voteSets[i].Contains(thirdPlace))
-                            {
-                                voteSets[i].Remove(thirdPlace);
-                                if (voteSets[i].IsEmpty())
-                                {
-                                    voteSets.RemoveAt(i--);
-                                }
-                            }
-                        }
-                    }
-                    else 
-                    {
-                        fourthPlace = best;
-                        fourthPlaceStats = gatherStats(fourthPlace, "fourth place");
+                        Console.WriteLine("Something went funky in vote counting... tracker is empty without a clear winner!");
                         break;
                     }
-                }
-                for (int i = 0; i < voteSets.Count; i++)
-                {
-                    if (voteSets[i][0] == worst)
+                    string best = placeVoteSets[0][0], worst = placeVoteSets[0][0];
+                    int bestCount = 0, worstCount = int.MaxValue;
+                    foreach (KeyValuePair<string, int> voteResult in votesTracker)
                     {
-                        voteSets[i].RemoveAt(0);
-                        if (voteSets[i].IsEmpty())
+                        if (voteResult.Value > bestCount)
                         {
-                            voteSets.RemoveAt(i--);
+                            best = voteResult.Key;
+                            bestCount = voteResult.Value;
+                        }
+                        if (voteResult.Value < worstCount)
+                        {
+                            worst = voteResult.Key;
+                            worstCount = voteResult.Value;
                         }
                     }
+                    if (bestCount * 2 > placeVoteSets.Count)
+                    {
+                        if (!haveWinner)
+                        {
+                            topRank = best;
+                            topRankStats = gatherStats(topRank, "winner");
+                            haveWinner = true;
+                            for (int i = 0; i < voteSets.Count; i++)
+                            {
+                                if (voteSets[i].Contains(topRank))
+                                {
+                                    voteSets[i].Remove(topRank);
+                                    if (voteSets[i].IsEmpty())
+                                    {
+                                        voteSets.RemoveAt(i--);
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    for (int i = 0; i < placeVoteSets.Count; i++)
+                    {
+                        for (int j = 0; j < placeVoteSets[i].Count; j++)
+                        if (placeVoteSets[i][j] == worst)
+                        {
+                            placeVoteSets[i].RemoveAt(j);
+                        }
+                    }
+                    for (int i = 0; i< placeVoteSets.Count; i++) {
+                        if (placeVoteSets[i].IsEmpty())
+                        {
+                            placeVoteSets.RemoveAt(i);
+                            i--;
+                        }
+                    }
+                    if (!haveWinner)
+                    {
+                        discards++;
+                    }
                 }
-                if (!haveWinner)
-                {
-                    discards++;
-                }
+                return new Tuple<string, string>(topRank, topRankStats);
             }
-            SendGenericPositiveMessageReply(message, $"Vote Results For **{topicName}: {topicSection.GetString("Topic")}**", $"**__Winner__**: **{winner}**: `{choicesSection.GetString(winner)}`"
-                + $"\n\n**Stats:**\nUsers who voted, in total: {usersWhoVotedTotal}\n{winnerStats}\n\n"
-                + $"**__Runner Up__**: **{secondPlace}**: `{choicesSection.GetString(secondPlace)}`\n**Stats For Runner Up**:\n{secondPlaceStats}\n\n"
-                + $"**__Thrid Place__**: **{thirdPlace}**: `{choicesSection.GetString(thirdPlace)}`\n**Stats For Third Place**:\n{thirdPlaceStats}\n\n"
-                + $"**__Fourth Place__**: **{fourthPlace}**: `{choicesSection.GetString(fourthPlace)}`\n**Stats For Fourth Place**:\n{fourthPlaceStats}");
-            //DemocracyBot.Save();
+            SendGenericPositiveMessageReply(message, $"Vote Results For **{topicName}: {topicSection.GetString("Topic")}**", $"**__Winner__**: **{firstTuple.Item1}**: `{choicesSection.GetString(firstTuple.Item1)}`"
+                + $"\n\n**Stats:**\nUsers who voted, in total: {usersWhoVotedTotal}\n{firstTuple.Item2}\n\n"
+                + $"**__Runner Up__**: **{secondTuple.Item1}**: `{choicesSection.GetString(secondTuple.Item1)}`\n**Stats For Runner Up**:\n{secondTuple.Item2}\n\n"
+                + $"**__Thrid Place__**: **{thirdTuple.Item1}**: `{choicesSection.GetString(thirdTuple.Item1)}`\n**Stats For Third Place**:\n{thirdTuple.Item2}\n\n"
+                + $"**__Fourth Place__**: **{fourthTuple.Item1}**: `{choicesSection.GetString(fourthTuple.Item1)}`\n**Stats For Fourth Place**:\n{fourthTuple.Item2}");
+            if (commitChanges) DemocracyBot.Save();
         }
     }
 }
