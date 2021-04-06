@@ -202,7 +202,7 @@ namespace DemocracyDiscordBot.CommandHandlers
             int usersWhoVotedTotal = voteSets.Count;
             int discards = 0;
             
-            string gatherStats(string choice, string type)
+            string gatherStats(string choice, string type, List<List<string>> placeVoteSets)
             {
                 int numberHadFirst = 0;
                 int positionTotal = 0;
@@ -225,23 +225,34 @@ namespace DemocracyDiscordBot.CommandHandlers
                     }
                 }
                 return $"Options that were discarded due to low support: {discards}\n"
-                + $"Users whose votes were discarded due to supporting only unpopular options: {usersWhoVotedTotal - voteSets.Count}\nUsers who listed the {type} first: {numberHadFirst}\n"
+                + $"Users whose votes were discarded due to supporting only unpopular options: {usersWhoVotedTotal - placeVoteSets.Count}\nUsers who listed the {type} first: {numberHadFirst}\n"
                 + $"Users who listed the {type} at all: {numberHadAtAll}\nAverage ranking of the {type}: {positionTotal / (float)numberHadAtAll:0.0}";
             }
 
-            Tuple<string, string> firstTuple = getRankWinner(voteSets);
-            Tuple<string, string> secondTuple = getRankWinner(voteSets);
-            Tuple<string, string> thirdTuple = getRankWinner(voteSets);
-            Tuple<string, string> fourthTuple = getRankWinner(voteSets);
+            Tuple<string, string> firstTuple = getRankWinner(voteSets.ConvertAll(new Converter<List<string>, List<string>>(x => x.ConvertAll(new Converter<string, string>(y => y.ToString())))));
+            Tuple<string, string> secondTuple = getRankWinner(voteSets.ConvertAll(new Converter<List<string>, List<string>>(x => x.ConvertAll(new Converter<string, string>(y => y.ToString())))));
+            Tuple<string, string> thirdTuple = getRankWinner(voteSets.ConvertAll(new Converter<List<string>, List<string>>(x => x.ConvertAll(new Converter<string, string>(y => y.ToString())))));
+            Tuple<string, string> fourthTuple = getRankWinner(voteSets.ConvertAll(new Converter<List<string>, List<string>>(x => x.ConvertAll(new Converter<string, string>(y => y.ToString())))));
 
-            Tuple<string, string> getRankWinner(List<List<string>> placeVoteSets ) {
+            Tuple<string, string> getRankWinner( List<List<string>> placeVoteSets ) {
                 string topRank = "";
                 string topRankStats = "";
                 bool haveWinner = false;
 
                 Dictionary<string, int> votesTracker = new Dictionary<string, int>(128);
+                Dictionary<string, int> totalVotesTracker = new Dictionary<string, int>();
 
                 discards = 0;
+
+                foreach (List<string> voteSet in placeVoteSets)
+                {
+                    foreach (string singleVote in voteSet) {
+                        if (!totalVotesTracker.TryGetValue(singleVote, out int singleVoteCount)) {
+                            singleVoteCount = 0;
+                        }
+                        totalVotesTracker[singleVote] = singleVoteCount + 1;
+                    }
+                }                
 
                 while (true)
                 {
@@ -260,7 +271,8 @@ namespace DemocracyDiscordBot.CommandHandlers
                         Console.WriteLine("Something went funky in vote counting... tracker is empty without a clear winner!");
                         break;
                     }
-                    string best = placeVoteSets[0][0], worst = placeVoteSets[0][0];
+                    string best = placeVoteSets[0][0];
+                    List<string> worstList = new List<string>();// placeVoteSets[0][0];
                     int bestCount = 0, worstCount = int.MaxValue;
                     foreach (KeyValuePair<string, int> voteResult in votesTracker)
                     {
@@ -271,8 +283,11 @@ namespace DemocracyDiscordBot.CommandHandlers
                         }
                         if (voteResult.Value < worstCount)
                         {
-                            worst = voteResult.Key;
+                            worstList = new List<string>() {voteResult.Key};
                             worstCount = voteResult.Value;
+                        }
+                        else if (voteResult.Value == worstCount) {
+                            worstList.Add(voteResult.Key);
                         }
                     }
                     if (bestCount * 2 > placeVoteSets.Count)
@@ -280,7 +295,7 @@ namespace DemocracyDiscordBot.CommandHandlers
                         if (!haveWinner)
                         {
                             topRank = best;
-                            topRankStats = gatherStats(topRank, "winner");
+                            topRankStats = gatherStats(topRank, "winner", placeVoteSets);
                             haveWinner = true;
                             for (int i = 0; i < voteSets.Count; i++)
                             {
@@ -296,6 +311,7 @@ namespace DemocracyDiscordBot.CommandHandlers
                             break;
                         }
                     }
+                    string worst = totalVotesTracker.Where(x => worstList.Contains(x.Key)).Aggregate((l, r) => l.Value < r.Value ? l : r).Key;
                     for (int i = 0; i < placeVoteSets.Count; i++)
                     {
                         for (int j = 0; j < placeVoteSets[i].Count; j++)
