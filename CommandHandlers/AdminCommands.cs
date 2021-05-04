@@ -233,6 +233,8 @@ namespace DemocracyDiscordBot.CommandHandlers
             Tuple<string, string> secondTuple = getRankWinner(voteSets.ConvertAll(new Converter<List<string>, List<string>>(x => x.ConvertAll(new Converter<string, string>(y => y.ToString())))));
             Tuple<string, string> thirdTuple = getRankWinner(voteSets.ConvertAll(new Converter<List<string>, List<string>>(x => x.ConvertAll(new Converter<string, string>(y => y.ToString())))));
             Tuple<string, string> fourthTuple = getRankWinner(voteSets.ConvertAll(new Converter<List<string>, List<string>>(x => x.ConvertAll(new Converter<string, string>(y => y.ToString())))));
+            Tuple<string, string> fifthTuple = getRankWinner(voteSets.ConvertAll(new Converter<List<string>, List<string>>(x => x.ConvertAll(new Converter<string, string>(y => y.ToString())))));
+            Tuple<string, string> sixthTuple = getRankWinner(voteSets.ConvertAll(new Converter<List<string>, List<string>>(x => x.ConvertAll(new Converter<string, string>(y => y.ToString())))));
 
             Tuple<string, string> getRankWinner( List<List<string>> placeVoteSets ) {
                 string topRank = "";
@@ -338,7 +340,10 @@ namespace DemocracyDiscordBot.CommandHandlers
                 + $"\n\n**Stats:**\nUsers who voted, in total: {usersWhoVotedTotal}\n{firstTuple.Item2}\n\n"
                 + $"**__Runner Up__**: **{secondTuple.Item1}**: `{choicesSection.GetString(secondTuple.Item1)}`\n**Stats For Runner Up**:\n{secondTuple.Item2}\n\n"
                 + $"**__Thrid Place__**: **{thirdTuple.Item1}**: `{choicesSection.GetString(thirdTuple.Item1)}`\n**Stats For Third Place**:\n{thirdTuple.Item2}\n\n"
-                + $"**__Fourth Place__**: **{fourthTuple.Item1}**: `{choicesSection.GetString(fourthTuple.Item1)}`\n**Stats For Fourth Place**:\n{fourthTuple.Item2}");
+                + $"**__Fourth Place__**: **{fourthTuple.Item1}**: `{choicesSection.GetString(fourthTuple.Item1)}`\n**Stats For Fourth Place**:\n{fourthTuple.Item2}\n\n"
+                + $"**__Fifth Place__**: **{fifthTuple.Item1}**: `{choicesSection.GetString(fifthTuple.Item1)}`\n**Stats For Fourth Place**:\n{fifthTuple.Item2}\n\n"
+                + $"**__Sixth Place__**: **{sixthTuple.Item1}**: `{choicesSection.GetString(sixthTuple.Item1)}`\n**Stats For Fourth Place**:\n{sixthTuple.Item2}"
+                );
             if (commitChanges) DemocracyBot.Save();
         }
     }
