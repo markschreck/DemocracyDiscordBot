@@ -341,8 +341,8 @@ namespace DemocracyDiscordBot.CommandHandlers
                 + $"**__Runner Up__**: **{secondTuple.Item1}**: `{choicesSection.GetString(secondTuple.Item1)}`\n**Stats For Runner Up**:\n{secondTuple.Item2}\n\n"
                 + $"**__Thrid Place__**: **{thirdTuple.Item1}**: `{choicesSection.GetString(thirdTuple.Item1)}`\n**Stats For Third Place**:\n{thirdTuple.Item2}\n\n"
                 + $"**__Fourth Place__**: **{fourthTuple.Item1}**: `{choicesSection.GetString(fourthTuple.Item1)}`\n**Stats For Fourth Place**:\n{fourthTuple.Item2}\n\n"
-                + $"**__Fifth Place__**: **{fifthTuple.Item1}**: `{choicesSection.GetString(fifthTuple.Item1)}`\n**Stats For Fourth Place**:\n{fifthTuple.Item2}\n\n"
-                + $"**__Sixth Place__**: **{sixthTuple.Item1}**: `{choicesSection.GetString(sixthTuple.Item1)}`\n**Stats For Fourth Place**:\n{sixthTuple.Item2}"
+                + $"**__Fifth Place__**: **{fifthTuple.Item1}**: `{choicesSection.GetString(fifthTuple.Item1)}`\n**Stats For Fifth Place**:\n{fifthTuple.Item2}\n\n"
+                + $"**__Sixth Place__**: **{sixthTuple.Item1}**: `{choicesSection.GetString(sixthTuple.Item1)}`\n**Stats For Sixth Place**:\n{sixthTuple.Item2}"
                 );
             if (commitChanges) DemocracyBot.Save();
         }
